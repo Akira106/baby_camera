@@ -46,7 +46,7 @@ node "Raspberry Pi" #lightblue {
     rectangle "/dev/video2" as v2 #white
     rectangle "/dev/video3" as v3 #white
     rectangle "/dev/snd" as a1 #white
-    rectangle "GPU" as gpu #white
+    rectangle "/dev/video11" as gpu #white
 
     package "v4l2loopback\n(Docker container)" #lightyellow {
         component "FFmpeg" as v4l2lb_ffmpeg #lightgreen
