@@ -1,0 +1,11 @@
+version: "3"
+services:
+  # youtubeライブ
+  youtube_live:
+    image: babycam:1.0
+    container_name: youtube_live
+    network_mode: host
+    environment:
+      - STREAM_URL=rtmp://a.rtmp.youtube.com/live2
+      - STREAM_KEY=yourstreamkey
+    command: python3 /home/babycam/youtube_live/main.py

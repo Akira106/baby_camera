@@ -1,0 +1,13 @@
+[Unit]
+Description=Baby Camera Service
+After=network-online.target docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/baby_camera/
+ExecStartPre=/usr/sbin/modprobe v4l2loopback devices=2
+ExecStart=sh /path/to/baby_camera/baby_camera.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,52 @@
+version: "3"
+services:
+  # 映像配信サーバー
+  server:
+    image: babycam:1.0
+    build:
+      context: .
+    container_name: server
+    network_mode: host
+    working_dir: /home/babycam/mediamtx
+    command: ./mediamtx
+
+  # 複数のアプリケーションが同時に映像を取得できるようにする
+  v4l2loopback:
+    image: babycam:1.0
+    container_name: v4l2loopback
+    devices:
+      - "/dev/video0:/dev/video0:mwr"
+      - "/dev/video2:/dev/video2:mwr"
+      - "/dev/video3:/dev/video3:mwr"
+    # INPUT_VIDEO_DEVICEから映像を取得して
+    # OUTPUT_VIDEO_DEVICE_1とOUTPUT_VIDEO_DEVICE_2の仮想デバイスに流し込む
+    environment:
+      - INPUT_VIDEO_DEVICE=/dev/video0
+      - OUTPUT_VIDEO_DEVICE_1=/dev/video2
+      - OUTPUT_VIDEO_DEVICE_2=/dev/video3
+      - WIDTH=1280
+      - HEIGHT=720
+      - FPS=10
+    command: python3 /home/babycam/v4l2loopback/main.py
+
+  # 映像をエンコードして映像配信サーバーに入力する
+  encoder:
+    image: babycam:1.0
+    container_name: encoder
+    network_mode: host
+    devices:
+      - "/dev/video2:/dev/video2:mwr"
+      - "/dev/video11:/dev/video11:mwr"
+      - "/dev/snd:/dev/snd:mwr"
+    environment:
+      - H264ENCODER=h264_v4l2m2m
+      - GOP_SIZE=30
+      - VIDEO_DEVICE=/dev/video2
+      - AUDIO_CARD_NUM=3
+      - AUDIO_DEVICE=0
+      - VIDEO_BITRATE=1.6M
+      - AUDIO_BITRATE=128k
+    depends_on:
+      - server
+      - v4l2loopback
+    command: python3 /home/babycam/encoder/main.py

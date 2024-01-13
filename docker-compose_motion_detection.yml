@@ -1,0 +1,19 @@
+version: "3"
+services:
+  # 動体検知 & 録画
+  motion_detection:
+    image: babycam:1.0
+    container_name: motion_detection
+    network_mode: host
+    devices:
+      - "/dev/video3:/dev/video3:mwr"
+    environment:
+      - VIDEO_DEVICE=3
+      - FRAME_SKIP_RATIO=5
+      - DIFF_THRESHOLD=30
+      - SIZE_THRESHOLD=1000
+      - RECORD_STOP_SEC=5
+      - OUTDIR=/home/babycam/motion_detection/recorded_videos
+    volumes:
+      - ./recorded_videos:/home/babycam/motion_detection/recorded_videos
+    command: python3 /home/babycam/motion_detection/main.py
