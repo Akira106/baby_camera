@@ -3,6 +3,9 @@ import subprocess
 import streamlit as st
 
 
+# カメラ(WebRTC)へのリンク
+CAMERA_LINK = "http://raspberrypi.local:8889/baby_camera/"
+
 # 各サービス名を表す文字列
 SERVICE_CAMERA = "camera"
 SERVICE_MOTION_DETECTION = "motion_detection"
@@ -14,9 +17,6 @@ DICT_COMPOSE_FILE = {
     SERVICE_MOTION_DETECTION: "docker-compose_motion_detection.yml",
     SERVICE_YOUTUBE_LIVE: "docker-compose_youtube_live.yml"
 }
-
-# カメラ(WebRTC)へのリンク
-CAMERA_LINK = "http://raspberrypi.local:8889/baby_camera/"
 
 
 def main():
