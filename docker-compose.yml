@@ -39,6 +39,7 @@ services:
       - "/dev/video11:/dev/video11:mwr"
       - "/dev/snd:/dev/snd:mwr"
     environment:
+      - FPS=10
       - H264ENCODER=h264_v4l2m2m
       - GOP_SIZE=30
       - VIDEO_DEVICE=/dev/video2

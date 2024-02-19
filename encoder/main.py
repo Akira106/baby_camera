@@ -6,6 +6,7 @@ import logging
 from utils import init_logger, SignalException, set_signal
 
 # 映像の設定
+FPS = os.environ["FPS"]
 H264ENCODER = os.environ["H264ENCODER"]
 GOP_SIZE = os.environ["GOP_SIZE"]
 VIDEO_DEVICE = os.environ["VIDEO_DEVICE"]
@@ -22,7 +23,7 @@ def encode():
     """
     cmd = \
         'ffmpeg -loglevel warning ' + \
-        '-f v4l2 -thread_queue_size 8192 -i %s ' % VIDEO_DEVICE + \
+        '-f v4l2 -thread_queue_size 8192 -r %s -i %s ' % (FPS, VIDEO_DEVICE) + \
         '-f alsa -thread_queue_size 8192 -i hw:%s,%s ' % (AUDIO_CARD_NUM, AUDIO_DEVICE) + \
         '-c:v %s -bsf:v h264_mp4toannexb -preset fast -g %s -b:v %s ' % (H264ENCODER, GOP_SIZE, VIDEO_BITRATE) + \
         '-c:a libopus -b:a %s -af "afftdn=nf=-25,highpass=f=200,lowpass=f=3000" ' % AUDIO_BITRATE + \
