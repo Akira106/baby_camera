@@ -1,10 +1,10 @@
 import subprocess
+import yaml
 
 import streamlit as st
 
+from shutdown_sidebar import shutdown_sidebar
 
-# カメラ(WebRTC)へのリンク
-CAMERA_LINK = "http://raspberrypi.local:8889/baby_camera/"
 
 # 各サービス名を表す文字列
 SERVICE_CAMERA = "camera"
@@ -18,6 +18,9 @@ DICT_COMPOSE_FILE = {
     SERVICE_YOUTUBE_LIVE: "docker-compose_youtube_live.yml"
 }
 
+# カメラ(WebRTC)へのリンク
+CAMERA_LINK = "http://raspberrypi.local:8889/baby_camera/"
+
 
 def main():
     # ページの設定
@@ -29,14 +32,14 @@ def main():
 
     # サービスの起動・停止状態の初期化
     list_service = [
-        # (サービス, コンテナ数)
-        (SERVICE_CAMERA, 3),
-        (SERVICE_MOTION_DETECTION, 1),
-        (SERVICE_YOUTUBE_LIVE, 1)
+        SERVICE_CAMERA,
+        SERVICE_MOTION_DETECTION,
+        SERVICE_YOUTUBE_LIVE
     ]
-    for service, ncontainer in list_service:
+    list_active_containers = get_active_containers()
+    for service in list_service:
         if service not in st.session_state:
-            if count_active_container(DICT_COMPOSE_FILE[service]) == ncontainer:
+            if is_all_container_active(DICT_COMPOSE_FILE[service], list_active_containers):
                 st.session_state[service] = True
             else:
                 st.session_state[service] = False
@@ -46,11 +49,7 @@ def main():
     st.divider()
 
     # サイドバーに電源オフのボタンをつける
-    shutdown = st.sidebar.button("シャットダウン")
-    if shutdown:
-        cmd = "shutdown -h now"
-        st.sidebar.markdown("シャットダウンします...")
-        subprocess.check_output(cmd, shell=True).decode().rstrip()
+    shutdown_sidebar()
 
     st.markdown("### カメラ")
     # カメラ起動済みならリンクをはる
@@ -130,7 +129,27 @@ def main():
         st.rerun()
 
 
-def count_active_container(compose_file="docker-compose.yml"):
+def get_active_containers():
+    """アクティブなコンテナの一覧を返す
+
+    Args:
+        なし
+
+    Returns:
+        list(str):
+            アクティブなコンテナ名
+    """
+    # アクティブなコンテナ名
+    cmd = 'docker ps --format "{{.Names}}"'
+    ret = subprocess.check_output(cmd, shell=True).decode().rstrip()
+    if ret == "":
+        list_active_containers = []
+    else:
+        list_active_containers = ret.split("\n")
+    return list_active_containers
+
+
+def is_all_container_active(compose_file, list_active_containers):
     """docker-compose.ymlで定義したコンテナのうちアクティブなものの数を数える
 
     Args:
@@ -139,12 +158,16 @@ def count_active_container(compose_file="docker-compose.yml"):
     Returns:
         int: コンテナ数
     """
-    cmd = 'docker-compose -f %s ps --services --filter "status=running"' % compose_file
-    ret = subprocess.check_output(cmd, shell=True).decode().rstrip()
-    if ret == "":
-        return 0
+    with open(compose_file) as f:
+        compose = yaml.safe_load(f)
+    list_container_name = []
+    for v in compose["services"].values():
+        list_container_name.append(v["container_name"])
+
+    if set(list_container_name) <= set(list_active_containers):
+        return True
     else:
-        return len(ret.split("\n"))
+        return False
 
 
 def activate_container(compose_file="docker-compose.yml"):
